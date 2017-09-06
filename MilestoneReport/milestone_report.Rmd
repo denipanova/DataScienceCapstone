@@ -1,0 +1,206 @@
+---
+title: "Milestone Report 1"
+author: "Denitsa Panova"
+date: "July 31, 2017"
+output: html_document
+---
+#Executive Summary
+The purpose of this paper is to compare three different text files. These files contain documents from
+English blogs, twits or news. Each line in the text files is a seperate document. 
+Using text mining techniques, we investigate each file seperately because there is significant difference in the 
+style of writing and the length of the documents between the three. We conclude that the most used words  
+in blogs are:*one, will,like, time, just, can,get* (which also are the ones which are used next to each other);  
+in twitter: *just,get,thank* (which are not usually used in the same twit);  
+and in news: *said,will,year,one* (which are also not used often together).  
+Therfore, the predict-your-next-word application which we will build will be primarely based on what text, the user will want to write: a blog,a twit or an article. 
+
+#Data 
+##Download Data
+Let's get the data from source. 
+```{r, echo = TRUE, eval=FALSE}
+#set working directory
+setwd('/Users/dpanova/Documents/Resources/DataScienceSpecialization/Capstone/')
+temp = tempfile()
+#download the file
+download.file('https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip',temp)
+#unzip it
+unzip(temp)
+```
+##Load the Data
+If we already have the data, we can just navigate to the appropriate folder. 
+To read in the text files and for the whole analysis will use **tx** package in R.  
+Each of the files will be considered as a seperate corpus.  
+```{r, echo=TRUE,eval=FALSE}
+#change working directory
+new_working_directory = '/Users/dpanova/Documents/Resources/DataScienceSpecialization/Capstone/final/en_US/'
+setwd(new_working_directory)
+#list files 
+file_names = list.files(new_working_directory)
+#read in all file names as a different corpus
+library('tm')
+corpus_files = list() #placeholder for the corpus names
+for (f in file_names){
+  temp = as.data.frame(readLines(f))
+  corp = Corpus(DataframeSource(temp))
+  corpus_files[[length(corpus_files)+1]] = temp
+}
+```
+##Transform the Data
+In order to do exploratory analysis, first we need to clean the data sets. 
+The full transformation of the data sets is visible in the appendix - [Data Transformation]
+
+#Exploratory Analysis
+##Document Term Matrix
+The exploratory analysis will be conducted on the document term matrix since it represent each line as a combination of words. 
+```{r, echo = TRUE,eval=FALSE}
+dtm_files = list()
+for(cname in corpus_files){
+  temp = DocumentTermMatrix(cname)
+  dtm_files[[length(dtm_files)+1]] = temp
+}
+```
+  
+##Basic Statistics
+This section provides basic statistics for the three documents.  
+```{r, echo = TRUE, eval=FALSE}
+basic_summary_table = as.data.frame(c())
+for(i in dtm_files){
+  dimenstions = dim(dtm_files[[i]])
+  basic_summary_table = rbind(basic_summary_table,
+                              dimenstions)
+}
+row.names(basic_summary_table) = c('Blog','Twitter','News')
+colnames(basic_summary_table) = c('Number_of_lines','Number_of_unique_words')
+```
+
+```{r,echo=FALSE, message=FALSE,warning=FALSE}
+load('C:/Users/dpanova/Documents/table_worspace.RData')
+a
+```
+
+##Graph Representation 
+This section provides three types of graphs for each file:  
+1) Histogram of the most frequent terms (assumption:we exclude terms in order to
+make the document term matrix only 90% sparse)   
+2) Word cloud of the most frequent terms (assumption:we exclude terms in order to
+make the document term matrix only 95% sparse)   
+3) Hyrarchical clustering of the most frequent terms to identify connections between the terms  
+The code is available in the appendix, [Graph Representaion Code].  
+
+ 
+###Blogs 
+```{r, echo=FALSE, out.width='80%'}
+knitr::include_graphics('C:/Users/dpanova/Documents/hist_blog.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cloud_blog.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cluster_blog.png')
+```
+  
+###Twitter
+```{r, echo=FALSE, out.width='80%'}
+knitr::include_graphics('C:/Users/dpanova/Documents/hist_twitter.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cloud_twitter.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cluster_twitter.png')
+```
+  
+###News
+```{r, echo=FALSE, out.width='80%'}
+knitr::include_graphics('C:/Users/dpanova/Documents/hist_news.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cloud_news.png')
+knitr::include_graphics('C:/Users/dpanova/Documents/cluster_news.png')
+```
+
+
+
+#References
+* [TM Tutorial 1](http://onepager.togaware.com/TextMiningO.pdf)
+* [TM Tutorial 2](https://rstudio-pubs-static.s3.amazonaws.com/265713_cbef910aee7642dc8b62996e38d2825d.html)
+
+
+#Apendix
+##Data Transformation
+```{r, echo=TRUE, eval=FALSE}
+for(i in length(corpus_files)){
+  #Convert to lower case
+  corpus_files[[i]] = tm_map(corpus_files[[i]], content_transformer(tolower))
+  #save the file as a plain text for easier calculation 
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+  #Remove Numbers
+  corpus_files[[i]] = tm_map(corpus_files[[i]], removeNumbers)
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+  #remove Punctuation
+  corpus_files[[i]] = tm_map(corpus_files[[i]] , removePunctuation)
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+  #Remove Stopwords
+  corpus_files[[i]] = tm_map(corpus_files[[i]] , removeWords, stopwords("english"))
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+  #Remove white spaces
+  corpus_files[[i]]  = tm_map(corpus_files[[i]] , stripWhitespace)
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+  #Stem words
+  corpus_files[[i]]  = tm_map(corpus_files[[i]], stemDocument)
+  corpus_files[[i]] = tm_map(corpus_files[[i]], PlainTextDocument)
+}
+```
+##Stopwords
+```{r, echo=TRUE,eval=FALSE}
+length(stopwords("english"))
+```
+
+```{r, echo=FALSE,message=FALSE}
+load('C:/Users/dpanova/Documents/table_worspace.RData')
+number_stop_words
+```
+
+```{r, echo=TRUE,eval=FALSE}
+head(stopwords("english"),30)
+```
+
+```{r, echo=FALSE,message=FALSE}
+load('C:/Users/dpanova/Documents/table_worspace.RData')
+sample_stopwords
+```
+
+##Graph Representaion Code
+```{r, echo=TRUE, eval=FALSE}
+#libraries
+library(RColorBrewer)
+library(wordcloud)
+library(ggplot2)
+library(cluster)
+#initialize plot list to placehold the graphs 
+plot_list = list()
+for(i in dtm_files){
+   dtm = dtm_files[[i]]
+  #sparse terms for the histogram
+    dtms = removeSparseTerms(dtm, 0.9)
+    #sparse terms for the word cloud
+    dtms2 = removeSparseTerms(dtm, 0.95)
+    #Get the frequency
+    freq = colSums(as.matrix(dtms))   
+    freq2 = colSums(as.matrix(dtms2))
+    #initialize sub-plot list 
+    sub_plot_list = list()
+    # Histogram 
+    wf = data.frame(word=names(freq), freq=freq) 
+    
+    hist = ggplot(wf, aes(x = reorder(word, -freq), y = freq, color = word , fill = word)) +
+              geom_bar(stat = "identity") + 
+              theme(axis.text.x=element_text(angle=45, hjust=1,),
+                    panel.background = element_rect('white'))+
+              labs(x = 'Words',y = 'Frequency') +
+              ggtitle('Histogram Most Frequent Words')+
+              theme(legend.position="")
+    sub_plot_list[[length(sub_plot_list)+1]] = hist
+    #Word CLoud
+    set.seed(142)   
+    wc = wordcloud(names(freq2), freq2, scale=c(6, .1), colors=brewer.pal(6, "Accent"))
+    sub_plot_list[[length(sub_plot_list)+1]] = wc
+    #Clesters
+    distance = dist(t(dtms), method="euclidian")   
+    clusters = hclust(d=distance, method="complete")  
+    cl = plot(clusters, hang=-1) 
+    sub_plot_list[[length(sub_plot_list)+1]] = cl
+    plot_list[[length(plot_list)+1]] = sub_plot_list
+}
+
+```
